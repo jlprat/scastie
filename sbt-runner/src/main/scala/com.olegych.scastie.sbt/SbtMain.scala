@@ -35,13 +35,13 @@ object SbtMain {
           |     transport = "akka.remote.netty.NettyRemoteTransport"
           |     netty.tcp {
           |       hostname = "127.0.0.1"
-          |       port = ${args.head}
+          |       port = 5150
           |     }
           |   }
           |}""".stripMargin)
 
     val system = ActorSystem("SbtRemote", config)
-    val remoteActor = system.actorOf(Props[SbtActor])
+    val remoteActor = system.actorOf(Props[SbtActor], name = "SbtActor")
     system.awaitTermination()
   }
 }

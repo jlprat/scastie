@@ -14,7 +14,7 @@ class PastesContainer(root: Path) {
       throw new Exception(s"trying to write paste to existing folder: ${pasteDir(id).toString}")
 
     val codeFilePath = codeFile(id)
-    codeFilePath.toFile.mkDirs()
+    codeFilePath.toFile.mkdirs()
     write(codeFilePath, paste.code)
     write(sbtConfigFile(id), paste.sbtConfig)
 

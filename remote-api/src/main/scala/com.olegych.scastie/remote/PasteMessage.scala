@@ -1,6 +1,8 @@
 package com.olegych.scastie
 package remote
 
+import akka.actor.ActorRef
+
 case class PasteProgress(
     id: Long,
     done: Boolean,
@@ -13,7 +15,8 @@ case class RunPaste(
   id: Long,
   code: String,
   sbtConfig: String,
-  scalaTargetType: api.ScalaTargetType
+  scalaTargetType: api.ScalaTargetType,
+  progressActor: ActorRef
 )
 
 case class RunPasteError(

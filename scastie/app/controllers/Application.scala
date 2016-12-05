@@ -1,6 +1,7 @@
 package controllers
 
-import com.olegych.scastie.web._
+import com.olegych.scastie._
+import web._
 
 import Progress._
 import api._
@@ -27,9 +28,7 @@ class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout, executionContext:
   def run(code: String,
           sbtConfig: String,
           scalaTargetType: ScalaTargetType): Future[Long] = {
-    (pasteActor ? AddPaste(code, sbtConfig, scalaTargetType))
-      .mapTo[Paste]
-      .map(_.id)
+    (pasteActor ? AddPaste(code, sbtConfig, scalaTargetType)).mapTo[Long]
   }
   def fetch(id: Long): Future[Option[String]] = {
     (pasteActor ? GetPaste(id)).mapTo[Option[String]]
@@ -49,8 +48,8 @@ object Application extends Controller {
   }
   import system.dispatcher
 
-  val progressActor = system.actorOf(Props[ProgressActor])
-  val pasteActor = system.actorOf(Props(new PasteActor(progressActor)))
+  val progressActor = system.actorOf(Props[ProgressActor], name = "ProgressActor")
+  val pasteActor = system.actorOf(Props(new PasteActor(progressActor)), name = "PasteActor")
 
   def tmp(file: String) = Action { implicit request =>
     Ok.sendFile(new java.io.File("/tmp/" + file))

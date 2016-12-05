@@ -15,7 +15,7 @@ class Sbt() {
   copyDir(src = Paths.get("../sbt-template"), dst = sbtDir)
 
   private val uniqueId = Random.alphanumeric.take(10).mkString
-  write(sbtDir.resolve("build.sbt"), s"""shellPrompt := (_ => "$uniqueId$nl")""")
+  write(sbtDir.resolve("build.sbt"), s"""shellPrompt := (_ => "$uniqueId\\n")""")
 
   private val sbtConfigFile = sbtDir.resolve("scastie/config.sbt")
   var currentSbtConfig = read(sbtConfigFile).getOrElse("")
@@ -38,8 +38,9 @@ class Sbt() {
       if (read == 10) {
         val line = chars.mkString
         prompt = line == uniqueId
-        lineCallback(line, false)
-        log.info(" sbt: " + line)
+        lineCallback(line, prompt)
+        println(line)
+        // log.info(" sbt: " + line)
         chars.clear()
       } else {
         chars += read.toChar
@@ -47,10 +48,12 @@ class Sbt() {
     }
   }
 
+  collect((line, _) => ())
+
   private def process(command: String, lineCallback: (String, Boolean) => Unit): Unit = {
     fin.write((command + nl).getBytes)
     fin.flush()
-    log.info("sbt: " + command)
+    println("running command: " + command)
     collect(lineCallback)
   }
 

@@ -33,15 +33,12 @@ class PasteActor(progressActor: ActorRef) extends Actor {
   def receive = {
     case add: AddPaste => {
       val id = container.writePaste(add)
-      router.route(add.toRunPaste(id), sender())
+      router.route(add.toRunPaste(id, progressActor), self)
+      sender ! id
     }
 
     case GetPaste(id) => {
       sender ! container.readPaste(id)
-    }
-
-    case progress: PasteProgress => {
-      progressActor ! progress
     }
   }
 }
@@ -52,7 +49,8 @@ case class AddPaste(
   sbtConfig: String,
   scalaTargetType: ScalaTargetType
 ) {
-  def toRunPaste(id: Long) = RunPaste(id, code, sbtConfig, scalaTargetType)
+  def toRunPaste(id: Long, progressActor: ActorRef) = 
+    RunPaste(id, code, sbtConfig, scalaTargetType, progressActor)
 }
 
 

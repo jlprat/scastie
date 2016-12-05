@@ -46,7 +46,7 @@ object ApplicationBuild extends Build {
       def problems: Array[Problem] = buffer.toArray
       def log(pos: Position, msg: String, sev: Severity): Unit = {
         object MyProblem extends Problem {
-          def category: String = null
+          def category: String = "foo"
           def severity: Severity = sev
           def message: String = msg
           def position: Position = pos
@@ -92,7 +92,7 @@ object ApplicationBuild extends Build {
   private def addDepsToState(state: State): State = {
     def extractDependencies(eval: compiler.Eval, loader: ClassLoader, state: State): Seq[Setting[_]] = {
       val forbiddenKeys = Set(fork, compile, onLoad, runAll)
-      val scriptArg = "src/main/scala/config.sbt"
+      val scriptArg = "scastie/config.sbt"
       val script = file(scriptArg).getAbsoluteFile
       val lines = IO.readLines(script).toIndexedSeq
 

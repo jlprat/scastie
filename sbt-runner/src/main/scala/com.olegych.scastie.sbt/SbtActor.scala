@@ -7,6 +7,7 @@ import api.ScalaTargetType
 import upickle.default.{read => uread}
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.event.LoggingReceive
 
 import scala.concurrent.duration._
 import scala.util.control.{NonFatal, NoStackTrace}
@@ -14,7 +15,7 @@ import scala.util.control.{NonFatal, NoStackTrace}
 class SbtActor() extends Actor with ActorLogging {
   private val sbt = new Sbt()
 
-  def receive = compilationKiller {
+  def receive = LoggingReceive { compilationKiller {
     case paste: RunPaste => {
         import paste.scalaTargetType
 
@@ -28,7 +29,7 @@ class SbtActor() extends Actor with ActorLogging {
         val paste0 = paste.copy(code = instrumentedCode)
 
         def eval(command: String) =
-          sbt.eval(command, paste0, processSbtOutput(sender, paste.id))
+          sbt.eval(command, paste0, processSbtOutput(paste.progressActor, paste.id))
 
         applyRunKiller(paste0) {
           if(scalaTargetType == ScalaTargetType.JVM ||
@@ -44,11 +45,11 @@ class SbtActor() extends Actor with ActorLogging {
           }
         }
     }
-  }
+  }}
 
-  private def processSbtOutput(sender: ActorRef, id: Long): (String, Boolean) => Unit = {
+  private def processSbtOutput(progressActor: ActorRef, id: Long): (String, Boolean) => Unit = {
     (line, done) => {
-      sender ! PasteProgress(
+      progressActor ! PasteProgress(
         id = id,
         output = line,
         done = done,
@@ -80,15 +81,15 @@ class SbtActor() extends Actor with ActorLogging {
     catch { case NonFatal(e) => List() }
   }
 
-  private val compilationKiller = createKiller(2.minutes)
-  private val runKiller = createKiller(30.seconds)
+  private val compilationKiller = createKiller("CompilationKiller", 2.minutes)
+  private val runKiller = createKiller("RunKiller", 20.seconds)
 
   private def applyRunKiller(paste: RunPaste)(block: => Unit) {
     runKiller { case _ => block } apply paste
   }
 
-  private def createKiller(timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
-    TimeoutActor(timeout, message => {
+  private def createKiller(actorName: String, timeout: FiniteDuration): (Actor.Receive) => Actor.Receive = {
+    TimeoutActor(actorName, timeout, message => {
       message match {
         case paste: RunPaste =>
           sender ! RunPasteError(paste.id, s"Killed because of timeout $timeout")

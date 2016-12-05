@@ -46,8 +46,8 @@ object TimeoutActor {
 
   case class Kill(message: Any)
 
-  def apply(timeout: FiniteDuration, kill: Any => Unit)(implicit context: ActorContext) =
-    create(context.actorOf(Props(new TimeoutActor(timeout, kill)))) _
+  def apply(actorName: String, timeout: FiniteDuration, kill: Any => Unit)(implicit context: ActorContext) =
+    create(context.actorOf(Props(new TimeoutActor(timeout, kill)), name = actorName)) _
 
   private def create(killer: ActorRef)(r: Receive)(implicit context: ActorContext): Receive = {
     case m =>

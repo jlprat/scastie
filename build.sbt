@@ -57,6 +57,7 @@ def akka(module: String) = "com.typesafe.akka" %% ("akka-" + module) % "2.3.11"
 lazy val remoteApi = project
   .in(file("remote-api"))
   .settings(baseSettings)
+  .settings(libraryDependencies += akka("actor"))
   .disablePlugins(play.PlayScala)
   .dependsOn(webApiJVM)
 
