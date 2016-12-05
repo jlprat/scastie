@@ -1,11 +1,11 @@
-package com.olegych.scastie
+package com.olegych
 
 import java.nio.file._
 import attribute.BasicFileAttributes
 
 import System.{lineSeparator => nl}
 
-package object sbt {
+package object scastie {
   def read(src: Path): Option[String] = {
     if(Files.exists(src)) Some(Files.readAllLines(src).toArray.mkString(nl))
     else None

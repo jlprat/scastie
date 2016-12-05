@@ -1,6 +1,10 @@
 package controllers
 
+import com.olegych.scastie.web._
+
+import Progress._
 import api._
+
 import autowire.Core.Request
 import upickle.default.{read => uread}
 
@@ -17,8 +21,9 @@ import java.nio.ByteBuffer
 import scala.concurrent.Future
 
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
 
-class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout) extends Api {
+class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext) extends Api {
   def run(code: String,
           sbtConfig: String,
           scalaTargetType: ScalaTargetType): Future[Long] = {
@@ -26,8 +31,8 @@ class ApiImpl(pasteActor: ActorRef)(implicit timeout: Timeout) extends Api {
       .mapTo[Paste]
       .map(_.id)
   }
-  def fetch(id: Long): Future[Option[Paste]] = {
-    (pasteActor ? GetPaste(id)).mapTo[Option[Paste]]
+  def fetch(id: Long): Future[Option[String]] = {
+    (pasteActor ? GetPaste(id)).mapTo[Option[String]]
   }
 }
 
@@ -42,6 +47,7 @@ object Application extends Controller {
       .load(classloader, Play.configuration.getString("actors.conf").get)
     ActorSystem("actors", config, classloader)
   }
+  import system.dispatcher
 
   val progressActor = system.actorOf(Props[ProgressActor])
   val pasteActor = system.actorOf(Props(new PasteActor(progressActor)))

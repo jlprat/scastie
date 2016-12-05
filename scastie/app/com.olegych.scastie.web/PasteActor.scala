@@ -1,8 +1,20 @@
-package actors
+package com.olegych.scastie
+package web
+
+import remote.{RunPaste, PasteProgress}
+import api.ScalaTargetType
+
+import play.api.Play
+import play.api.Play.current
+
+import akka.actor.{Actor, ActorRef}
+import akka.routing.{ActorSelectionRoutee, RoundRobinRoutingLogic, Router}
+
+import java.nio.file._
 
 class PasteActor(progressActor: ActorRef) extends Actor {
 
-  private val container = PastesContainer(
+  private val container = new PastesContainer(
     Paths.get(Play.configuration.getString("pastes.data.dir").get)
   )
 
@@ -20,12 +32,12 @@ class PasteActor(progressActor: ActorRef) extends Actor {
 
   def receive = {
     case add: AddPaste => {
-      val id = container.write(add)
+      val id = container.writePaste(add)
       router.route(add.toRunPaste(id), sender())
     }
 
     case GetPaste(id) => {
-      sender ! container.read(id)
+      sender ! container.readPaste(id)
     }
 
     case progress: PasteProgress => {
