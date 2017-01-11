@@ -160,17 +160,6 @@ lazy val server = project
   .enablePlugins(SbtWeb, play.PlayScala)
   .dependsOn(remoteApi, client, webApi211JVM)
 
-// lazy val remoteApi = project
-// lazy val sbtRunner = project
-// lazy val server = project
-// lazy val scastie = project
-// lazy val codemirror = project
-// lazy val client = project
-// lazy val instrumentation = project
-// lazy val runtimeDotty = project
-// lazy val sbtApi = project
-// lazy val sbtScastie = project
-
 lazy val scastie = project
   .in(file("."))
   .aggregate(
@@ -198,6 +187,7 @@ lazy val scastie = project
 lazy val codemirror = project
   .settings(baseSettings)
   .settings(
+    test := {},
     scalacOptions -= "-Ywarn-dead-code",
     jsDependencies ++= {
       def codemirrorD(path: String): JSModuleID =
@@ -239,6 +229,7 @@ lazy val client = project
   .settings(
     JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     skip in packageJSDependencies := false,
+    test := {},
     jsDependencies ++= Seq(
       react("react-with-addons", "React"),
       react("react-dom", "ReactDOM", "react-with-addons"),
@@ -271,7 +262,7 @@ lazy val instrumentation = project
   )
   .disablePlugins(play.PlayScala)
 
-def crossDir(projectId: String) = file("." + projectId)
+def crossDir(projectId: String) = file(".cross/" + projectId)
 def dash(name: String) = name.replaceAllLiterally(".", "-")
 
 /* webApi is for the communication between the server and the frontend */
@@ -289,7 +280,10 @@ def webApi(scalaV: String) = {
       ),
       unmanagedSourceDirectories in Compile += (baseDirectory in ThisBuild).value / projectName / "src" / "main" / "scala"
     )
-    .jsSettings(libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1")
+    .jsSettings(
+      test := {},
+      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
+    )
     .disablePlugins(play.PlayScala)
 }
 
@@ -319,6 +313,7 @@ def runtimeScala(scalaV: String, webApi: CrossProject) = {
         "com.lihaoyi" %%% "pprint"  % upickleVersion
       )
     )
+    .jsSettings(test := {})
     .dependsOn(webApi)
     .disablePlugins(play.PlayScala)
 }
